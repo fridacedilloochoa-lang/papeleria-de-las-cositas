@@ -23,6 +23,12 @@ type StoreData = {
   config: StoreConfig;
 };
 
+// Firestore no acepta campos con valor "undefined". Esta función los limpia
+// (los convierte en null) antes de guardar, para evitar errores al hacer setDoc.
+function clean<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 // Convierte un apartado (nuevo o viejo) en su lista de productos (items).
 function getApartadoItems(apt: Apartado): ApartadoItem[] {
   if (apt.items && apt.items.length > 0) return apt.items;
@@ -100,9 +106,9 @@ export const api = {
   // Se usa solo la primera vez que la tienda se conecta a una base de datos vacía.
   async seedInitialData(): Promise<void> {
     await Promise.all([
-      ...initialProducts.map(p => setDoc(doc(productsCol, p.id), p)),
-      ...initialApartados.map(a => setDoc(doc(apartadosCol, a.id), a)),
-      setDoc(configDocRef, initialStoreConfig),
+      ...initialProducts.map(p => setDoc(doc(productsCol, p.id), clean(p))),
+      ...initialApartados.map(a => setDoc(doc(apartadosCol, a.id), clean(a))),
+      setDoc(configDocRef, clean(initialStoreConfig)),
     ]);
   },
 
@@ -126,7 +132,7 @@ export const api = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    await setDoc(doc(productsCol, newProduct.id), newProduct);
+    await setDoc(doc(productsCol, newProduct.id), clean(newProduct));
     return newProduct;
   },
 
@@ -140,7 +146,7 @@ export const api = {
       id,
       updatedAt: new Date().toISOString(),
     };
-    await setDoc(ref, updated);
+    await setDoc(ref, clean(updated));
     return updated;
   },
 
@@ -152,7 +158,7 @@ export const api = {
     const newStock = exactStock !== undefined
       ? Math.max(0, exactStock)
       : Math.max(0, (current.stock || 0) + (delta || 0));
-    await setDoc(ref, { ...current, stock: newStock, updatedAt: new Date().toISOString() });
+    await setDoc(ref, clean({ ...current, stock: newStock, updatedAt: new Date().toISOString() }));
     return { stock: newStock };
   },
 
@@ -226,7 +232,7 @@ export const api = {
       updatedAt: new Date().toISOString(),
     };
 
-    await setDoc(doc(apartadosCol, newApartado.id), newApartado);
+    await setDoc(doc(apartadosCol, newApartado.id), clean(newApartado));
 
     if (apartadoData.decrementStock) {
       const itemsToDecrement = apartadoData.items && apartadoData.items.length > 0
@@ -238,7 +244,7 @@ export const api = {
         const snap = await getDoc(ref);
         if (snap.exists()) {
           const current = snap.data() as Product;
-          await setDoc(ref, { ...current, stock: Math.max(0, (current.stock || 0) - (it.quantity || 1)) });
+          await setDoc(ref, clean({ ...current, stock: Math.max(0, (current.stock || 0) - (it.quantity || 1)) }));
         }
       }
     }
@@ -298,14 +304,14 @@ export const api = {
       status: newStatus,
       updatedAt: new Date().toISOString(),
     };
-    await setDoc(ref, updated);
+    await setDoc(ref, clean(updated));
 
     if (itemData.decrementStock) {
       const prodRef = doc(productsCol, itemData.productId);
       const prodSnap = await getDoc(prodRef);
       if (prodSnap.exists()) {
         const currentProd = prodSnap.data() as Product;
-        await setDoc(prodRef, { ...currentProd, stock: Math.max(0, (currentProd.stock || 0) - quantity) });
+        await setDoc(prodRef, clean({ ...currentProd, stock: Math.max(0, (currentProd.stock || 0) - quantity) }));
       }
     }
 
@@ -337,7 +343,7 @@ export const api = {
       status,
       updatedAt: new Date().toISOString(),
     };
-    await setDoc(ref, updated);
+    await setDoc(ref, clean(updated));
     return updated;
   },
 
@@ -351,7 +357,7 @@ export const api = {
       id,
       updatedAt: new Date().toISOString(),
     };
-    await setDoc(ref, updated);
+    await setDoc(ref, clean(updated));
     return updated;
   },
 
@@ -365,7 +371,7 @@ export const api = {
     const snap = await getDoc(configDocRef);
     const current = snap.exists() ? (snap.data() as StoreConfig) : initialStoreConfig;
     const updated = { ...current, ...configUpdates };
-    await setDoc(configDocRef, updated);
+    await setDoc(configDocRef, clean(updated));
     return updated;
   },
 
@@ -378,7 +384,7 @@ export const api = {
     const configSnap = await getDoc(configDocRef);
     const current = configSnap.exists() ? (configSnap.data() as StoreConfig) : initialStoreConfig;
     const updated = { ...current, categories: current.categories.filter(c => c !== categoryName) };
-    await setDoc(configDocRef, updated);
+    await setDoc(configDocRef, clean(updated));
     return { success: true };
   },
 

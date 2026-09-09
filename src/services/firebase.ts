@@ -1,14 +1,13 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAgp3fWmbz-O8Pb8oPf6OX6HPAv6XYrUyU',
-  authDomain: 'papeleria-de-las-cositas.firebaseapp.com',
-  projectId: 'papeleria-de-las-cositas',
-  storageBucket: 'papeleria-de-las-cositas.firebasestorage.app',
-  messagingSenderId: '658116317680',
-  appId: '1:658116317680:web:83e22dfabe52f5bf66cd35',
-  measurementId: 'G-YYGH0S02E3',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);
